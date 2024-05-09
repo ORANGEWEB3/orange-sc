@@ -1,7 +1,7 @@
 {
-  "name": "kog-core",
+  "name": "orange-sc",
   "version": "1.0.0",
-  "description": "Core ERC1155 for Kogs Collectible",
+  "description": "Orange Smart Contract",
   "main": "index.js",
   "scripts": {
     "compile": "npx hardhat compile",
@@ -15,10 +15,10 @@
     "prettier": "npx prettier --write contracts/*.sol"
   },
   "keywords": [
-    "kog",
-    "erc1155"
+    "orange",
+    "smart-contract"
   ],
-  "author": "RFOX Labs",
+  "author": "Orange",
   "license": "MIT",
   "dependencies": {
     "@chainlink/contracts": "^0.2.0",
