@@ -1,12 +1,8 @@
-pragma solidity ^0.8.13;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 
 contract SaleDeposit is Ownable {
-  using SafeMath for uint256;
-  
   uint256 public price;
   uint256 public totalSlotsLimit;
   uint256 public maxQtyPerTransaction;
@@ -21,7 +17,7 @@ contract SaleDeposit is Ownable {
 
   receive() external payable {
       revert("fallback payable not allowed");
-  } 
+  }
 
   constructor(uint256 _price, uint256 _totalSlotsLimit, uint256 _maxQtyPerTransaction) {
     require(_price > 0, "price cannot be 0");
@@ -33,6 +29,10 @@ contract SaleDeposit is Ownable {
     maxQtyPerTransaction = _maxQtyPerTransaction;
   }
 
+  function renounceOwnership() public override onlyOwner {
+    revert("renounceOwnership is disabled");
+  }
+
   /**
    * @param _totalQty total qty to deposit
    * @dev msg.value must be equal to price * _totalQty, otherwise it will revert
@@ -41,7 +41,7 @@ contract SaleDeposit is Ownable {
     require(_totalQty > 0, "totalQty must be greater than 0");
     require(_totalQty <= maxQtyPerTransaction, "totalQty exceeds limit per tx");
     require(totalBoughtQty + _totalQty <= totalSlotsLimit, "totalQty exceeds slot limit");
-    require(msg.value == _totalQty.mul(price), "invalid value sent");
+    require(msg.value == _totalQty * price, "invalid value sent");
     
     userDepositedAmount[msg.sender] += msg.value;
     userQty[msg.sender] += _totalQty;
@@ -53,12 +53,13 @@ contract SaleDeposit is Ownable {
   }
 
   /**
-   * Owner to withdraw the token from this contract (could be used to transfer the token to the 0 address)
+   * Owner to withdraw the token from this contract
    *
    * @param _recipient Recipient address, could be 0 address
    * @param _amount total amount to withdraw
    */
   function withdraw(address _recipient, uint256 _amount) external onlyOwner {
+    require(_recipient != address(0), "invalid recipient");
     require(_amount > 0, "Amount must be greater than 0");
     require(_amount <= address(this).balance, "Insufficient balance in the contract");
     

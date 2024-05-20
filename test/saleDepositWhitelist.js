@@ -67,6 +67,14 @@ describe("Presale Deposit", function () {
     expect(await rfoxDeposit.owner()).to.be.equal(owner.address);
   });
 
+  it("renounceOwnership should fail if called by non-owner", async function() {
+    await expect(rfoxDeposit.connect(jane).renounceOwnership()).to.be.revertedWith("Ownable: caller is not the owner");
+  })
+
+  it("renounceOwnership should fail even if called by owner", async function() {
+    await expect(rfoxDeposit.renounceOwnership()).to.be.revertedWith("renounceOwnership is disabled");
+  })
+
   it("should revert deposit for 0 qty", async function () {
     await expect(rfoxDeposit.deposit(0, ownerProof)).to.be.revertedWith("totalQty must be greater than 0");
   });
@@ -272,6 +280,18 @@ describe("Presale Deposit", function () {
 
     const amountWithdrawal = await provider.getBalance(rfoxDeposit.address);
     await expect(rfoxDeposit.connect(owner).withdraw(jane.address, BigNumber.from(amountWithdrawal).add(1))).to.be.revertedWith("Insufficient balance in the contract");
+  });
+
+  it("should revert withdrawal if tried to withdraw to zero address as recipient", async function () {
+    let qty = maxQtyPerTx;
+    let value = BigNumber.from(price).mul(BigNumber.from(qty));
+    let iterations = 10;
+    for(let i = 0; i < iterations; i++) {  
+      await rfoxDeposit.connect(bob).deposit(qty, bobProof, {value: value});
+    }
+
+    const amountWithdrawal = value.mul(BigNumber.from(iterations));
+    await expect(rfoxDeposit.connect(owner).withdraw(ethers.constants.AddressZero, amountWithdrawal)).to.be.revertedWith("invalid recipient");
   });
 
   it("should successfully withdraw", async function () {
