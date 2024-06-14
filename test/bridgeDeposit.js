@@ -90,7 +90,7 @@ describe("Bridge Deposit=", function () {
     expect(userDepositBalance.toString()).to.equal(totalDepositBalance.toString())
     expect(userDepositBalance.toString()).to.equal(amount.toString())
 
-    await expect(rfoxDeposit.connect(bob).withdraw(ethers.constants.AddressZero, amount)).to.be.revertedWith("Ownable: caller is not the owner");
+    await expect(rfoxDeposit.connect(bob).burn(amount)).to.be.revertedWith("Ownable: caller is not the owner");
   });
 
   it("should revert to call withdraw with 0 amount", async function () {
@@ -104,7 +104,7 @@ describe("Bridge Deposit=", function () {
     expect(userDepositBalance.toString()).to.equal(totalDepositBalance.toString())
     expect(userDepositBalance.toString()).to.equal(amount.toString())
 
-    await expect(rfoxDeposit.connect(owner).withdraw(trashAddress, 0)).to.be.revertedWith("Amount must be greater than 0");
+    await expect(rfoxDeposit.connect(owner).burn(0)).to.be.revertedWith("Amount must be greater than 0");
   });
 
   it("should revert to call withdraw with exceeds balance", async function () {
@@ -118,7 +118,7 @@ describe("Bridge Deposit=", function () {
     expect(userDepositBalance.toString()).to.equal(totalDepositBalance.toString())
     expect(userDepositBalance.toString()).to.equal(amount.toString())
 
-    await expect(rfoxDeposit.connect(owner).withdraw(trashAddress, amount * 2)).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+    await expect(rfoxDeposit.connect(owner).burn(amount * 2)).to.be.revertedWith("ERC20: transfer amount exceeds balance");
   });
 
   it("should successfully withdraw token", async function () {
@@ -134,7 +134,7 @@ describe("Bridge Deposit=", function () {
 
     const initialRecipientBalance = await token.balanceOf(trashAddress);
     const initialDepositContractBalance = await token.balanceOf(rfoxDeposit.address);
-    await rfoxDeposit.connect(owner).withdraw(trashAddress, amount);
+    await rfoxDeposit.connect(owner).burn(amount);
 
     const latestRecipientBalance = await token.balanceOf(trashAddress);
     const latestDepositContractBalance = await token.balanceOf(rfoxDeposit.address);

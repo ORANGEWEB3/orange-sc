@@ -10,7 +10,7 @@ contract BridgeDeposit is Ownable {
   mapping(address => uint256) public depositedAmounts; // Tracks deposited amounts for each user
 
   event Deposit (address indexed user, uint256 amount);
-  event Withdraw (address indexed sender, address recipient, uint256 amount);
+  event Burned (address indexed sender, uint256 amount);
 
   constructor(address _token) {
     require(_token != address(0), "invalid token address");
@@ -36,16 +36,16 @@ contract BridgeDeposit is Ownable {
   }
 
   /**
-   * Owner to withdraw the token from this contract (could be used to transfer the token to the 0 address - to burn the token)
+   * Owner to burn the token from this contract (send to 0x1 address - inaccessible address)
    *
-   * @param _recipient Recipient address, could be 0 address
    * @param _amount total amount to withdraw
    */
-  function withdraw(address _recipient, uint256 _amount) external onlyOwner {
+  function burn( uint256 _amount) external onlyOwner {
     require(_amount > 0, "Amount must be greater than 0");
     IERC20 _token = IERC20(token);
-    _token.safeTransfer(_recipient, _amount);
+    // transfer to the inaccessible address
+    _token.safeTransfer(address(0x1), _amount);
     
-    emit Withdraw(msg.sender, _recipient, _amount);
+    emit Burned(msg.sender, _amount);
   }
 }

@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.12;
+pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 /**
@@ -658,20 +658,6 @@ library Endian {
 }
 
 // ----------------------------------------------------------------------------
-// Contract function to receive approval and execute function in one call
-//
-// Borrowed from MiniMeToken
-// ----------------------------------------------------------------------------
-abstract contract ApproveAndCallFallBack {
-    function receiveApproval(
-        address from,
-        uint256 tokens,
-        address token,
-        bytes memory data
-    ) external virtual;
-}
-
-// ----------------------------------------------------------------------------
 // Owned contract
 // ----------------------------------------------------------------------------
 contract Owned {
@@ -704,15 +690,6 @@ contract Owned {
 contract Oracled is Owned {
     mapping(address => bool) public oracles;
 
-    modifier onlyOracle() {
-        require(
-            oracles[msg.sender],
-            "Account is not a registered oracle"
-        );
-
-        _;
-    }
-
     function regOracle(address _newOracle) external onlyOwner {
         require(!oracles[_newOracle], "Oracle is already registered");
 
@@ -737,12 +714,12 @@ contract ETHAVAXBRIDGE is Oracled {
 
     // RFOX Token address
     // Only using this address for bridging
-    IERC20 public rfox;
+    IERC20 public immutable rfox;
     // Threshold meaning the minimum requirement for oracle confirmations
     uint8 public threshold;
     // ChainID for RFOX Bridge
-    uint8 public thisChainId;
-    // How many locked token in ETHWAXBRIDGE
+    uint8 public immutable thisChainId;
+    // How many locked token in ETHAVAXBRIDGE
     uint256 public totalLocked;
     // Mapping from transaction ID
     mapping(uint64 => mapping(address => bool)) signed;
@@ -789,7 +766,7 @@ contract ETHAVAXBRIDGE is Oracled {
     // ------------------------------------------------------------------------
     // Moves tokens to the inaccessible account and then sends event for the oracles
     // to monitor and issue on other chain
-    // to : WAX address
+    // to : AVAX address
     // tokens : number of tokens in satoshis
     // chainId : The chain id that they will be sent to
     // ------------------------------------------------------------------------
@@ -798,7 +775,7 @@ contract ETHAVAXBRIDGE is Oracled {
         string memory to,
         uint256 tokens,
         uint256 chainid
-    ) external returns (bool success) {
+    ) external onlyOwner returns (bool success) {
         lock(msg.sender, tokens);
 
         emit Bridge(msg.sender, to, tokens, chainid);
@@ -883,7 +860,7 @@ contract ETHAVAXBRIDGE is Oracled {
                 signed[td.id][potential] = true;
                 numberSigs++;
 
-                if (numberSigs >= 10) {
+                if (numberSigs == 10) {
                     break;
                 }
             }
