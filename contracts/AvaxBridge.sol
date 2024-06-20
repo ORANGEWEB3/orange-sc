@@ -718,7 +718,7 @@ contract ETHAVAXBRIDGE is Oracled {
     // Threshold meaning the minimum requirement for oracle confirmations
     uint8 public threshold;
     // ChainID for RFOX Bridge
-    uint8 public immutable thisChainId;
+    uint32 public immutable thisChainId;
     // How many locked token in ETHAVAXBRIDGE
     uint256 public totalLocked;
     // Mapping from transaction ID
@@ -737,10 +737,8 @@ contract ETHAVAXBRIDGE is Oracled {
     struct BridgeData {
         uint64 id;
         uint32 ts;
-        uint64 fromAddr;
         uint256 quantity;
-        uint64 symbolRaw;
-        uint8 chainId;
+        uint32 chainId;
         address toAddress;
     }
 
@@ -751,7 +749,7 @@ contract ETHAVAXBRIDGE is Oracled {
     // Constructor
     // ------------------------------------------------------------------------
     constructor(IERC20 rfoxAddress) public {
-        uint8 chainId;
+        uint32 chainId;
 
         threshold = 3;
         rfox = rfoxAddress;
@@ -794,32 +792,24 @@ contract ETHAVAXBRIDGE is Oracled {
     {
         BridgeData memory td;
 
-        uint64 oracleQuantity = 0;
         uint64 id;
         uint32 ts;
-        uint64 fromAddr;
-        uint64 symbolRaw;
-        uint8 chainId;
+        uint256 oracleQuantity;
+        uint32 chainId;
         address toAddress;
 
         assembly {
             id := mload(add(add(sigData, 0x8), 0))
             ts := mload(add(add(sigData, 0x4), 8))
-            fromAddr := mload(add(add(sigData, 0x8), 12))
-            oracleQuantity := mload(add(add(sigData, 0x8), 20))
-            symbolRaw := mload(add(add(sigData, 0x8), 28))
-            chainId := mload(add(add(sigData, 0x1), 36))
-            toAddress := mload(add(add(sigData, 0x14), 37))
+            oracleQuantity := mload(add(add(sigData, 0x20), 12))
+            chainId := mload(add(add(sigData, 0x4), 44))
+            toAddress := mload(add(add(sigData, 0x14), 48))
         }
-
-        uint256 reversedQuantity = Endian.reverse64(oracleQuantity);
 
         td.id = Endian.reverse64(id);
         td.ts = Endian.reverse32(ts);
-        td.fromAddr = Endian.reverse64(fromAddr);
-        td.quantity = uint256(reversedQuantity) * 1e10;
-        td.symbolRaw = Endian.reverse64(symbolRaw);
-        td.chainId = chainId;
+        td.quantity = oracleQuantity;
+        td.chainId = Endian.reverse32(chainId);
         td.toAddress = toAddress;
 
         require(thisChainId == td.chainId, "Invalid Chain ID");
